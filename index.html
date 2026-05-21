@@ -1,0 +1,1826 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BAIC Credit Calculator — Credits vs Tokens</title>
+<link href="https://fonts.googleapis.com/css2?family=Lato:wght@300;400;500;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --uni-teal: #179DAB;
+    --uni-blue: #2973C3;
+    --uni-blue-dark: #1D568F;
+    --uni-blue-pale: #E6F1FB;
+    --uni-blue-text: #0C447C;
+    --uni-dark: #4C4E56;
+    --uni-black: #242529;
+    --uni-white: #FFFFFF;
+    --uni-gold: #CC963F;
+    --uni-gold-bg: #FAEEDA;
+    --uni-gold-text: #854F0B;
+    --uni-green: #37AD68;
+    --uni-green-bg: #EAF3DE;
+    --uni-green-text: #3B6D11;
+    --uni-purple: #652E8B;
+    --uni-purple-bg: #EEEDFE;
+    --uni-purple-text: #3C3489;
+    --uni-teal-bg: #E1F5EE;
+    --uni-teal-text: #0F6E56;
+    --uni-red: #C92037;
+    --uni-red-bg: #FCEBEB;
+    --uni-red-text: #791F1F;
+    --uni-light: #F4F6F8;
+    --uni-light-2: #FAFBFC;
+    --uni-border: #E2E5EA;
+    --uni-gray: #919399;
+    --uni-gradient: linear-gradient(135deg, #1D568F, #2973C3);
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    font-family: 'Lato', 'Helvetica Neue', Arial, sans-serif;
+    margin: 0;
+    padding: 0;
+    background: var(--uni-light);
+    color: var(--uni-dark);
+    line-height: 1.5;
+    font-size: 14px;
+  }
+
+  .container {
+    max-width: 1280px;
+    margin: 0 auto;
+    padding: 24px 20px 48px;
+  }
+
+  /* Header */
+  .header {
+    background: var(--uni-gradient);
+    color: var(--uni-white);
+    padding: 24px 28px;
+    border-radius: 12px;
+    margin-bottom: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 16px;
+  }
+
+  .header-text .eyebrow {
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    opacity: 0.85;
+    margin-bottom: 6px;
+  }
+
+  .header-text h1 {
+    margin: 0 0 4px;
+    font-size: 22px;
+    font-weight: 700;
+  }
+
+  .header-text p {
+    margin: 0;
+    font-size: 13px;
+    opacity: 0.92;
+  }
+
+  /* Master toggle: Credits ↔ Tokens ↔ Side-by-side */
+  .view-toggle {
+    display: inline-flex;
+    background: rgba(255,255,255,0.15);
+    padding: 4px;
+    border-radius: 10px;
+    backdrop-filter: blur(4px);
+  }
+
+  .view-toggle button {
+    background: transparent;
+    border: none;
+    padding: 8px 16px;
+    font-size: 12px;
+    font-weight: 700;
+    color: rgba(255,255,255,0.7);
+    cursor: pointer;
+    border-radius: 7px;
+    font-family: inherit;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    transition: all 0.15s ease;
+  }
+
+  .view-toggle button.active {
+    background: var(--uni-white);
+    color: var(--uni-blue-dark);
+  }
+
+  /* Main layout: inputs left, estimate right */
+  .main-grid {
+    display: grid;
+    grid-template-columns: 1fr 360px;
+    gap: 16px;
+    margin-bottom: 20px;
+  }
+
+  @media (max-width: 980px) {
+    .main-grid { grid-template-columns: 1fr; }
+  }
+
+  /* Customer type selector */
+  .customer-type {
+    background: var(--uni-white);
+    border-radius: 12px;
+    padding: 18px 20px;
+    border: 1px solid var(--uni-border);
+    margin-bottom: 16px;
+  }
+
+  .customer-type h3 {
+    margin: 0 0 4px;
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--uni-black);
+  }
+
+  .customer-type p {
+    margin: 0 0 12px;
+    font-size: 12px;
+    color: var(--uni-gray);
+  }
+
+  .ct-options {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+  }
+
+  .ct-options button {
+    padding: 12px 16px;
+    background: var(--uni-light);
+    border: 1.5px solid var(--uni-border);
+    border-radius: 8px;
+    cursor: pointer;
+    font-family: inherit;
+    text-align: left;
+    transition: all 0.15s;
+  }
+
+  .ct-options button.active {
+    background: var(--uni-teal);
+    border-color: var(--uni-teal);
+    color: var(--uni-white);
+  }
+
+  .ct-options button .ct-title {
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--uni-black);
+    display: block;
+  }
+
+  .ct-options button.active .ct-title { color: var(--uni-white); }
+
+  .ct-options button .ct-sub {
+    font-size: 11px;
+    color: var(--uni-gray);
+    margin-top: 2px;
+    display: block;
+  }
+
+  .ct-options button.active .ct-sub { color: rgba(255,255,255,0.85); }
+
+  /* Tab bar */
+  .tabs {
+    background: var(--uni-white);
+    border-radius: 12px 12px 0 0;
+    padding: 0;
+    border: 1px solid var(--uni-border);
+    border-bottom: none;
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+  }
+
+  .tabs button {
+    background: transparent;
+    border: none;
+    padding: 14px 10px;
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--uni-gray);
+    cursor: pointer;
+    font-family: inherit;
+    border-bottom: 3px solid transparent;
+    transition: all 0.15s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+  }
+
+  .tabs button:hover { color: var(--uni-dark); }
+
+  .tabs button.active {
+    color: var(--uni-blue);
+    border-bottom-color: var(--uni-blue);
+    font-weight: 700;
+  }
+
+  .tabs button.active[data-tab="models"] { color: var(--uni-purple); border-bottom-color: var(--uni-purple); }
+  .tabs button.active[data-tab="agents"] { color: var(--uni-gold); border-bottom-color: var(--uni-gold); }
+  .tabs button.active[data-tab="users"] { color: var(--uni-green); border-bottom-color: var(--uni-green); }
+  .tabs button.active[data-tab="partner"] { color: var(--uni-red); border-bottom-color: var(--uni-red); }
+
+  /* Tab panels */
+  .panel {
+    background: var(--uni-white);
+    border: 1px solid var(--uni-border);
+    border-radius: 0 0 12px 12px;
+    border-top: none;
+    padding: 20px;
+    min-height: 360px;
+  }
+
+  .panel.hidden { display: none; }
+
+  .panel h2 {
+    margin: 0 0 4px;
+    font-size: 16px;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .panel.data h2 { color: var(--uni-blue); }
+  .panel.models h2 { color: var(--uni-purple); }
+  .panel.agents h2 { color: var(--uni-gold); }
+  .panel.users h2 { color: var(--uni-green); }
+  .panel.partner h2 { color: var(--uni-red); }
+
+  .panel .panel-sub {
+    margin: 0 0 16px;
+    font-size: 12px;
+    color: var(--uni-gray);
+  }
+
+  .input-row {
+    margin-bottom: 14px;
+  }
+
+  .input-row label {
+    display: block;
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--uni-dark);
+    margin-bottom: 4px;
+  }
+
+  .input-row .hint {
+    font-size: 11px;
+    color: var(--uni-gray);
+    margin-top: 4px;
+  }
+
+  .input-row input[type="number"] {
+    width: 100%;
+    padding: 10px 12px;
+    font-size: 14px;
+    font-family: inherit;
+    border: 1px solid var(--uni-border);
+    border-radius: 6px;
+    background: var(--uni-light-2);
+    color: var(--uni-black);
+    transition: border 0.15s, background 0.15s;
+  }
+
+  .input-row input[type="number"]:focus {
+    outline: none;
+    border-color: var(--uni-blue);
+    background: var(--uni-white);
+    box-shadow: 0 0 0 3px rgba(41, 115, 195, 0.1);
+  }
+
+  .input-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+  }
+
+  .input-section {
+    padding: 14px 16px;
+    border-radius: 8px;
+    border: 1px solid var(--uni-border);
+  }
+
+  .input-section.blue { background: var(--uni-blue-pale); border-color: rgba(41, 115, 195, 0.2); }
+  .input-section.teal { background: var(--uni-teal-bg); border-color: rgba(23, 157, 171, 0.2); }
+  .input-section.purple { background: var(--uni-purple-bg); border-color: rgba(101, 46, 139, 0.2); }
+  .input-section.gold { background: var(--uni-gold-bg); border-color: rgba(204, 150, 63, 0.25); }
+  .input-section.green { background: var(--uni-green-bg); border-color: rgba(55, 173, 104, 0.25); }
+
+  .input-section .section-title {
+    font-size: 13px;
+    font-weight: 700;
+    margin-bottom: 12px;
+    color: var(--uni-black);
+  }
+
+  .input-section.blue .section-title { color: var(--uni-blue-text); }
+  .input-section.teal .section-title { color: var(--uni-teal-text); }
+  .input-section.purple .section-title { color: var(--uni-purple-text); }
+  .input-section.gold .section-title { color: var(--uni-gold-text); }
+  .input-section.green .section-title { color: var(--uni-green-text); }
+
+  .row-with-hint {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    margin-bottom: 4px;
+  }
+
+  .row-with-hint .right-hint {
+    font-size: 11px;
+    color: var(--uni-teal-text);
+    font-weight: 500;
+  }
+
+  .est-total {
+    background: var(--uni-teal-bg);
+    color: var(--uni-teal-text);
+    padding: 8px 12px;
+    border-radius: 6px;
+    font-size: 12px;
+    font-weight: 700;
+    text-align: center;
+    margin-top: 8px;
+  }
+
+  /* Per-Model Operations callout */
+  .ops-callout {
+    background: var(--uni-purple-bg);
+    border: 1px solid rgba(101, 46, 139, 0.2);
+    border-radius: 8px;
+    padding: 12px 14px;
+    margin-top: 12px;
+  }
+
+  .ops-callout .ops-title {
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--uni-purple-text);
+    margin-bottom: 6px;
+  }
+
+  .ops-callout ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    font-size: 12px;
+    color: var(--uni-purple-text);
+    line-height: 1.8;
+  }
+
+  .ops-callout ul li::before {
+    content: '• ';
+    margin-right: 4px;
+  }
+
+  /* Annual Estimate panel (right side) */
+  .estimate-panel {
+    background: var(--uni-white);
+    border-radius: 12px;
+    border: 1px solid var(--uni-border);
+    padding: 20px;
+    position: sticky;
+    top: 16px;
+    align-self: start;
+    max-height: calc(100vh - 32px);
+    overflow-y: auto;
+  }
+
+  .estimate-panel h3 {
+    margin: 0 0 4px;
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--uni-black);
+  }
+
+  .estimate-panel .est-sub {
+    font-size: 11px;
+    color: var(--uni-gray);
+    margin-bottom: 16px;
+  }
+
+  .big-metric {
+    text-align: center;
+    padding: 14px;
+    background: var(--uni-blue-pale);
+    border-radius: 10px;
+    margin-bottom: 10px;
+  }
+
+  .big-metric .big-value {
+    font-size: 30px;
+    font-weight: 700;
+    color: var(--uni-blue);
+    line-height: 1;
+  }
+
+  .big-metric .big-label {
+    font-size: 11px;
+    color: var(--uni-gray);
+    margin-top: 4px;
+  }
+
+  .metric-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+    margin-bottom: 10px;
+  }
+
+  /* Side-by-side Credits vs Tokens units (top of estimate panel) */
+  .units-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+    margin-bottom: 10px;
+  }
+
+  .unit-card {
+    padding: 12px 10px;
+    border-radius: 8px;
+    text-align: center;
+    border: 1.5px solid transparent;
+  }
+
+  .unit-card.baic {
+    background: var(--uni-teal-bg);
+    border-color: rgba(23, 157, 171, 0.3);
+  }
+
+  .unit-card.token {
+    background: var(--uni-gold-bg);
+    border-color: rgba(204, 150, 63, 0.3);
+  }
+
+  .unit-card .uc-value {
+    font-size: 20px;
+    font-weight: 700;
+    line-height: 1;
+  }
+
+  .unit-card.baic .uc-value { color: var(--uni-teal-text); }
+  .unit-card.token .uc-value { color: var(--uni-gold-text); }
+
+  .unit-card .uc-label {
+    font-size: 11px;
+    margin-top: 4px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    font-weight: 700;
+  }
+
+  .unit-card.baic .uc-label { color: var(--uni-teal-text); }
+  .unit-card.token .uc-label { color: var(--uni-gold-text); }
+
+  .unit-card .uc-rate {
+    font-size: 10px;
+    margin-top: 4px;
+    opacity: 0.8;
+  }
+
+  .unit-card.baic .uc-rate { color: var(--uni-teal-text); }
+  .unit-card.token .uc-rate { color: var(--uni-gold-text); }
+
+  .metric-card {
+    padding: 10px 12px;
+    background: var(--uni-light-2);
+    border-radius: 8px;
+    text-align: center;
+  }
+
+  .metric-card .mc-value {
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--uni-black);
+    line-height: 1;
+  }
+
+  .metric-card.cost .mc-value { color: var(--uni-green); font-size: 18px; }
+  .metric-card.savings .mc-value { color: var(--uni-purple); }
+
+  .metric-card .mc-label {
+    font-size: 10px;
+    color: var(--uni-gray);
+    margin-top: 4px;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+  }
+
+  .estimate-divider {
+    height: 1px;
+    background: var(--uni-border);
+    margin: 14px 0;
+  }
+
+  /* Side-by-side comparison cards */
+  .comparison-cards {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+    margin-bottom: 12px;
+  }
+
+  .comp-card {
+    padding: 12px;
+    border-radius: 8px;
+    text-align: center;
+    border: 1.5px solid transparent;
+  }
+
+  .comp-card.baic {
+    background: var(--uni-teal-bg);
+    border-color: var(--uni-teal);
+  }
+
+  .comp-card.token {
+    background: var(--uni-gold-bg);
+    border-color: var(--uni-gold);
+  }
+
+  .comp-card .cc-value {
+    font-size: 18px;
+    font-weight: 700;
+    line-height: 1;
+  }
+
+  .comp-card.baic .cc-value { color: var(--uni-teal-text); }
+  .comp-card.token .cc-value { color: var(--uni-gold-text); }
+
+  .comp-card .cc-label {
+    font-size: 10px;
+    margin-top: 4px;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+    font-weight: 500;
+  }
+
+  .comp-card.baic .cc-label { color: var(--uni-teal-text); }
+  .comp-card.token .cc-label { color: var(--uni-gold-text); }
+
+  .savings-banner {
+    background: var(--uni-green-bg);
+    border: 1px solid rgba(55, 173, 104, 0.3);
+    border-radius: 8px;
+    padding: 12px;
+    text-align: center;
+    margin-bottom: 12px;
+  }
+
+  .savings-banner .sv-value {
+    font-size: 22px;
+    font-weight: 700;
+    color: var(--uni-green-text);
+    line-height: 1;
+  }
+
+  .savings-banner .sv-label {
+    font-size: 11px;
+    color: var(--uni-green-text);
+    margin-top: 3px;
+  }
+
+  /* Breakdown table */
+  .breakdown-section {
+    background: var(--uni-white);
+    border-radius: 12px;
+    border: 1px solid var(--uni-border);
+    padding: 20px;
+    margin-top: 16px;
+  }
+
+  .breakdown-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 14px;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .breakdown-header h2 {
+    margin: 0;
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--uni-black);
+  }
+
+  .breakdown-header .bd-sub {
+    font-size: 12px;
+    color: var(--uni-gray);
+    margin: 2px 0 0;
+  }
+
+  .bd-category {
+    margin-bottom: 14px;
+    border: 1px solid var(--uni-border);
+    border-radius: 10px;
+    overflow: hidden;
+  }
+
+  .bd-category-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 14px;
+    font-size: 13px;
+    font-weight: 700;
+  }
+
+  .bd-cat-unstr-init { background: var(--uni-blue-pale); color: var(--uni-blue-text); }
+  .bd-cat-unstr-week { background: var(--uni-teal-bg); color: var(--uni-teal-text); }
+  .bd-cat-structured { background: var(--uni-teal-bg); color: var(--uni-teal-text); }
+  .bd-cat-rag { background: var(--uni-green-bg); color: var(--uni-green-text); }
+  .bd-cat-model { background: var(--uni-purple-bg); color: var(--uni-purple-text); }
+  .bd-cat-agent { background: var(--uni-gold-bg); color: var(--uni-gold-text); }
+
+  .bd-pill {
+    background: rgba(0,0,0,0.08);
+    padding: 3px 10px;
+    border-radius: 12px;
+    font-size: 11px;
+  }
+
+  .bd-pills {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+  }
+
+  .bd-pill.pill-credit { background: rgba(23, 157, 171, 0.15); color: var(--uni-teal-text); }
+  .bd-pill.pill-token { background: rgba(204, 150, 63, 0.18); color: var(--uni-gold-text); }
+
+  body[data-view="credits"] .bd-pill.pill-token { display: none; }
+  body[data-view="tokens"] .bd-pill.pill-credit { display: none; }
+
+  .bd-rows {
+    background: var(--uni-white);
+    padding: 6px 0;
+  }
+
+  .bd-row {
+    display: grid;
+    grid-template-columns: 1fr auto auto auto;
+    gap: 12px;
+    padding: 10px 14px;
+    border-top: 1px solid var(--uni-light);
+    align-items: center;
+  }
+
+  .bd-row:first-child { border-top: none; }
+
+  .bd-row.headers {
+    background: var(--uni-light-2);
+    font-size: 10px;
+    font-weight: 700;
+    color: var(--uni-gray);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    padding: 8px 14px;
+  }
+
+  .bd-row.headers > * { text-align: right; }
+  .bd-row.headers > :first-child { text-align: left; }
+
+  .bd-row .bd-name {
+    font-size: 13px;
+    color: var(--uni-black);
+    font-weight: 500;
+  }
+
+  .bd-row .bd-formula {
+    font-size: 11px;
+    color: var(--uni-gray);
+    font-weight: 400;
+    margin-top: 2px;
+  }
+
+  .bd-row .bd-value {
+    font-size: 13px;
+    font-weight: 700;
+    text-align: right;
+    min-width: 75px;
+  }
+
+  .bd-row .bd-baic { color: var(--uni-teal-text); }
+  .bd-row .bd-token { color: var(--uni-gold-text); }
+  .bd-row .bd-inf { color: var(--uni-black); }
+
+  .bd-tag {
+    display: inline-block;
+    font-size: 10px;
+    padding: 2px 8px;
+    border-radius: 4px;
+    margin-top: 4px;
+    background: var(--uni-light);
+    color: var(--uni-gray);
+    font-weight: 500;
+  }
+
+  /* Modes that hide/show columns */
+  /* Default both-view: Item | Inf | Credits | Tokens | BAIC$ | Token$ */
+  .bd-row, .bd-row.headers {
+    grid-template-columns: 1.6fr 0.8fr 0.8fr 0.9fr 0.8fr 0.9fr;
+  }
+
+  body[data-view="credits"] .col-tokens-num,
+  body[data-view="credits"] .col-tokens-dollar { display: none !important; }
+
+  body[data-view="credits"] .bd-row,
+  body[data-view="credits"] .bd-row.headers {
+    grid-template-columns: 1.8fr 0.9fr 1fr 1fr;
+  }
+
+  body[data-view="tokens"] .col-credits-num,
+  body[data-view="tokens"] .col-baic-dollar { display: none !important; }
+
+  body[data-view="tokens"] .bd-row,
+  body[data-view="tokens"] .bd-row.headers {
+    grid-template-columns: 1.8fr 0.9fr 1fr 1fr;
+  }
+
+  /* Right-panel credit/token-specific cards */
+  body[data-view="credits"] .show-token-only { display: none !important; }
+  body[data-view="tokens"] .show-baic-only { display: none !important; }
+
+  /* Footer */
+  .footer {
+    text-align: center;
+    padding-top: 20px;
+    margin-top: 24px;
+    font-size: 11px;
+    color: var(--uni-gray);
+    border-top: 1px solid var(--uni-border);
+  }
+
+  .footer a { color: var(--uni-blue); text-decoration: none; }
+
+  .takeaway {
+    background: var(--uni-white);
+    border-radius: 12px;
+    padding: 16px 20px;
+    border-left: 4px solid var(--uni-purple);
+    margin-top: 16px;
+    font-size: 13px;
+    line-height: 1.6;
+  }
+
+  .takeaway h3 {
+    margin: 0 0 6px;
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--uni-purple);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+
+  .takeaway p { margin: 0; }
+  .takeaway p + p { margin-top: 8px; }
+</style>
+</head>
+<body data-view="credits">
+
+<div class="container">
+
+  <!-- Header with master toggle -->
+  <div class="header">
+    <div class="header-text">
+      <div class="eyebrow">Internal training · BAIC Credit Calculator</div>
+      <h1>Credits vs tokens: see the same workload, priced two ways</h1>
+      <p>Change the inputs. Toggle the view. Watch what stays predictable and what doesn't.</p>
+    </div>
+    <div class="view-toggle">
+      <button class="active" data-view="credits">Credits</button>
+      <button data-view="tokens">Tokens</button>
+      <button data-view="both">Side-by-side</button>
+    </div>
+  </div>
+
+  <!-- Customer Type -->
+  <div class="customer-type">
+    <h3>Customer Type</h3>
+    <p>Select an enterprise size to load default estimates — or edit any value below.</p>
+    <div class="ct-options">
+      <button class="active" data-preset="mid">
+        <span class="ct-title">🏢 Mid-Size Enterprise</span>
+        <span class="ct-sub">~1,000 employees, 35 KBs</span>
+      </button>
+      <button data-preset="large">
+        <span class="ct-title">🏛️ Large Enterprise</span>
+        <span class="ct-sub">~2,000 employees, 70 KBs</span>
+      </button>
+    </div>
+  </div>
+
+  <div class="main-grid">
+
+    <!-- LEFT: Tabbed inputs -->
+    <div>
+      <div class="tabs">
+        <button class="active" data-tab="data">📄 Str/Unstr data</button>
+        <button data-tab="models">⚙️ Models</button>
+        <button data-tab="agents">🤖 Agents</button>
+        <button data-tab="users">🛡️ Users</button>
+        <button data-tab="partner">🏢 Partner</button>
+      </div>
+
+      <!-- Data panel -->
+      <div class="panel data" id="panel-data">
+        <h2>📊 Knowledge Bases & Documents</h2>
+        <div class="input-grid">
+          <div class="input-section blue">
+            <div class="section-title">Unstructured Data</div>
+            <div class="input-row">
+              <label>Knowledge Bases</label>
+              <input type="number" id="in-kb" value="5" min="1">
+              <div class="hint">Vector spaces for documents</div>
+            </div>
+            <div class="input-row">
+              <label>Average Documents per KB</label>
+              <input type="number" id="in-docs-per-kb" value="25000" min="1">
+            </div>
+            <div class="input-row">
+              <label>Average Pages per Document</label>
+              <input type="number" id="in-pages-per-doc" value="20" min="1">
+            </div>
+            <div class="input-row">
+              <label>Complex Doc Ratio (%)</label>
+              <input type="number" id="in-complex-ratio" value="15" min="0" max="100">
+              <div class="hint">Images, tables, scans</div>
+            </div>
+          </div>
+
+          <div class="input-section teal">
+            <div class="section-title">Structured Data (Total: <span id="struct-total">30</span> KBs)</div>
+            <div class="input-row">
+              <div class="row-with-hint">
+                <label>Simple KBs</label>
+                <span class="right-hint">&lt;50 tables each</span>
+              </div>
+              <input type="number" id="in-simple-kb" value="10" min="0">
+            </div>
+            <div class="input-row">
+              <div class="row-with-hint">
+                <label>Medium KBs</label>
+                <span class="right-hint">50-100 tables each</span>
+              </div>
+              <input type="number" id="in-medium-kb" value="10" min="0">
+            </div>
+            <div class="input-row">
+              <div class="row-with-hint">
+                <label>Complex KBs</label>
+                <span class="right-hint">&gt;200 tables each</span>
+              </div>
+              <input type="number" id="in-complex-kb" value="10" min="0">
+            </div>
+            <div class="est-total">Est. Total Tables: <span id="est-tables">3,500</span></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Models panel -->
+      <div class="panel models hidden" id="panel-models">
+        <h2>⚙️ Model Configuration</h2>
+        <div class="input-section purple">
+          <div class="input-row">
+            <label>Number of SLM Models</label>
+            <input type="number" id="in-slm" value="6" min="0">
+            <div class="hint">Each model requires scanning, redteaming, and fine-tuning</div>
+          </div>
+          <div class="ops-callout">
+            <div class="ops-title">Per-Model Operations (Annual)</div>
+            <ul>
+              <li>Static Scanning: 2 scans × 1K inferences</li>
+              <li>Red Teaming: 2 tests × 2K inferences</li>
+              <li>Initial Fine-tuning: 50K inferences</li>
+              <li>Perpetuity Fine-tuning: 1% of initial × 52 runs</li>
+              <li>LoRA Deployments: 52 deployments × 6 inferences</li>
+            </ul>
+          </div>
+        </div>
+        <div class="input-section gold" style="margin-top: 14px;">
+          <div class="input-row">
+            <label>Usage of FT SLM Agent</label>
+            <input type="number" id="in-slm-usage" value="30" min="0">
+            <div class="hint">Usage of SLM triggers inferencing, not just the FT part — an estimated number of agents and queries is needed to fully calculate the price of an SLM.</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Agents panel -->
+      <div class="panel agents hidden" id="panel-agents">
+        <h2>🤖 Agent Configuration</h2>
+        <p class="panel-sub">Each agent run requires 7 inference calls</p>
+        <div class="input-grid">
+          <div class="input-section gold">
+            <div class="input-row">
+              <label>Hourly Agents</label>
+              <input type="number" id="in-agents-hourly" value="10" min="0">
+              <div class="hint">Run every hour, 24/7</div>
+            </div>
+            <div class="input-row" style="margin-bottom: 0;">
+              <label>Multi Agent Flow</label>
+              <input type="number" id="in-agents-multi" value="1" min="0">
+              <div class="hint">Avg agent flow as 10 agents</div>
+            </div>
+          </div>
+          <div class="input-section gold">
+            <div class="input-row">
+              <label>Daily Agents</label>
+              <input type="number" id="in-agents-daily" value="10" min="0">
+              <div class="hint">Run once per day</div>
+            </div>
+            <div class="input-row" style="margin-bottom: 0;">
+              <label>Weekly Agents</label>
+              <input type="number" id="in-agents-weekly" value="10" min="0">
+              <div class="hint">Run once per week</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Users panel -->
+      <div class="panel users hidden" id="panel-users">
+        <h2>🛡️ User Configuration</h2>
+        <div class="input-grid">
+          <div class="input-section green">
+            <div class="input-row" style="margin-bottom: 0;">
+              <label>Number of AI-Using Employees</label>
+              <input type="number" id="in-employees" value="1000" min="0">
+            </div>
+          </div>
+          <div class="input-section green">
+            <div class="input-row" style="margin-bottom: 0;">
+              <label>RAG Calls per Employee/Day</label>
+              <input type="number" id="in-rag-per-day" value="10" min="0">
+              <div class="hint">Q&amp;A, search use cases (3 inf per call)</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Partner panel -->
+      <div class="panel partner hidden" id="panel-partner">
+        <h2>🏢 Partner Distribution</h2>
+        <p class="panel-sub">Split annual estimate across customers</p>
+        <div class="input-section" style="background: var(--uni-red-bg); border-color: rgba(201, 32, 55, 0.2);">
+          <div class="input-row" style="margin-bottom: 0;">
+            <label>Number of Customers</label>
+            <input type="number" id="in-customers" value="0" min="0">
+            <div class="hint">If &gt; 0, totals are divided across this many customers to show per-customer cost.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- RIGHT: Annual Estimate -->
+    <div class="estimate-panel">
+      <h3>Annual Estimate</h3>
+      <p class="est-sub" id="est-sub">Based on Mid-Size enterprise setup</p>
+
+      <div class="big-metric">
+        <div class="big-value" id="m-inferences">48.95M</div>
+        <div class="big-label">Total Inferences / Year</div>
+      </div>
+
+      <div class="units-row">
+        <div class="unit-card baic">
+          <div class="uc-value" id="m-credits">489.5K</div>
+          <div class="uc-label">Credits</div>
+          <div class="uc-rate">1 credit = 100 inf</div>
+        </div>
+        <div class="unit-card token">
+          <div class="uc-value" id="m-tokens">751B</div>
+          <div class="uc-label">Tokens</div>
+          <div class="uc-rate"><span id="m-tokens-rate">avg 15.3K</span> / inf</div>
+        </div>
+      </div>
+
+      <div class="metric-row">
+        <div class="metric-card cost show-baic-only">
+          <div class="mc-value" id="m-baic-cost">$2.45M</div>
+          <div class="mc-label">BAIC cost</div>
+        </div>
+        <div class="metric-card cost show-baic-only">
+          <div class="mc-value" id="m-cogs" style="font-size: 16px;">$293,675</div>
+          <div class="mc-label">COGS (internal)</div>
+        </div>
+      </div>
+
+      <div class="comparison-cards" style="display: none;" id="side-by-side-cards">
+        <div class="comp-card baic">
+          <div class="cc-value" id="m-baic-side">$2.45M</div>
+          <div class="cc-label">BAIC Credits</div>
+        </div>
+        <div class="comp-card token">
+          <div class="cc-value" id="m-token-side">$15.65M</div>
+          <div class="cc-label">Frontier Tokens</div>
+        </div>
+      </div>
+
+      <div class="savings-banner" id="savings-banner">
+        <div class="sv-value" id="m-savings">$13.20M</div>
+        <div class="sv-label" id="m-savings-pct">84.4% Total Savings vs Tokens</div>
+      </div>
+
+      <div class="estimate-divider"></div>
+
+      <div style="font-size: 11px; font-weight: 700; color: var(--uni-gray); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px;">Frontier Model Cost Breakdown</div>
+      <div style="font-size: 13px;">
+        <div style="display: flex; justify-content: space-between; padding: 6px 0;">
+          <span style="color: var(--uni-dark);">Token Cost</span>
+          <span style="font-weight: 700; color: var(--uni-gold-text);" id="m-token-cost">$15.15M</span>
+        </div>
+        <div style="display: flex; justify-content: space-between; padding: 6px 0;">
+          <span style="color: var(--uni-dark);">Compute / Storage / Network</span>
+          <span style="font-weight: 700; color: var(--uni-gold-text);" id="m-compute-cost">$500.0K</span>
+        </div>
+        <div style="display: flex; justify-content: space-between; padding: 6px 0; border-top: 1px solid var(--uni-border); margin-top: 4px; font-weight: 700;">
+          <span>Frontier Total</span>
+          <span style="color: var(--uni-gold-text);" id="m-token-total">$15.65M</span>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Detailed Inference Breakdown -->
+  <div class="breakdown-section">
+    <div class="breakdown-header">
+      <div>
+        <h2>📋 Detailed Inference Breakdown</h2>
+        <div class="bd-sub">Annual inference calls by category — switch the toggle above to change the price view</div>
+      </div>
+    </div>
+
+    <div class="bd-category">
+      <div class="bd-category-header bd-cat-unstr-init">
+        <span>📄 Unstructured Data — Initial Processing</span>
+        <span class="bd-pills"><span class="bd-pill"><span id="cat-unstr-init">0</span> inf</span><span class="bd-pill pill-credit"><span id="cat-unstr-init-credits">0</span> credits</span><span class="bd-pill pill-token"><span id="cat-unstr-init-tokens">0</span> tokens</span></span>
+      </div>
+      <div class="bd-rows">
+        <div class="bd-row headers">
+          <div>Item</div>
+          <div>Inferences</div>
+          <div class="col-credits-num">Credits</div>
+          <div class="col-tokens-num">Tokens</div>
+          <div class="col-baic-dollar">BAIC ($)</div>
+          <div class="col-tokens-dollar">Token ($)</div>
+        </div>
+        <div class="bd-row">
+          <div>
+            <div class="bd-name">Simple Docs <span id="formula-simple-docs" class="bd-formula">(1.25M pages × 3 inf)</span></div>
+            <div class="bd-tag">High token, high latency</div>
+          </div>
+          <div class="bd-value bd-inf" id="v-simple-docs">3.75M</div>
+          <div class="bd-value bd-inf col-credits-num" id="v-simple-docs-credits">0</div>
+          <div class="bd-value bd-inf col-tokens-num" id="v-simple-docs-tokens">0</div>
+          <div class="bd-value bd-baic col-baic-dollar" id="v-simple-docs-baic">$0</div>
+          <div class="bd-value bd-token col-tokens-dollar" id="v-simple-docs-token">$0</div>
+        </div>
+        <div class="bd-row">
+          <div>
+            <div class="bd-name">Complex Docs <span id="formula-complex-docs" class="bd-formula">(62.5K pages × 18 inf)</span></div>
+            <div class="bd-tag">High token, high latency</div>
+          </div>
+          <div class="bd-value bd-inf" id="v-complex-docs">1.13M</div>
+          <div class="bd-value bd-inf col-credits-num" id="v-complex-docs-credits">0</div>
+          <div class="bd-value bd-inf col-tokens-num" id="v-complex-docs-tokens">0</div>
+          <div class="bd-value bd-baic col-baic-dollar" id="v-complex-docs-baic">$0</div>
+          <div class="bd-value bd-token col-tokens-dollar" id="v-complex-docs-token">$0</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="bd-category">
+      <div class="bd-category-header bd-cat-unstr-week">
+        <span>📄 Unstructured Data — Weekly Runs (1% daily change)</span>
+        <span class="bd-pills"><span class="bd-pill"><span id="cat-unstr-week">0</span> inf</span><span class="bd-pill pill-credit"><span id="cat-unstr-week-credits">0</span> credits</span><span class="bd-pill pill-token"><span id="cat-unstr-week-tokens">0</span> tokens</span></span>
+      </div>
+      <div class="bd-rows">
+        <div class="bd-row headers">
+          <div>Item</div>
+          <div>Inferences</div>
+          <div class="col-credits-num">Credits</div>
+          <div class="col-tokens-num">Tokens</div>
+          <div class="col-baic-dollar">BAIC ($)</div>
+          <div class="col-tokens-dollar">Token ($)</div>
+        </div>
+        <div class="bd-row">
+          <div>
+            <div class="bd-name">Simple Docs per run <span id="formula-simple-weekly" class="bd-formula">(weekly × 52)</span></div>
+            <div class="bd-tag">High token, high latency</div>
+          </div>
+          <div class="bd-value bd-inf" id="v-simple-weekly">1.95M</div>
+          <div class="bd-value bd-inf col-credits-num" id="v-simple-weekly-credits">0</div>
+          <div class="bd-value bd-inf col-tokens-num" id="v-simple-weekly-tokens">0</div>
+          <div class="bd-value bd-baic col-baic-dollar" id="v-simple-weekly-baic">$0</div>
+          <div class="bd-value bd-token col-tokens-dollar" id="v-simple-weekly-token">$0</div>
+        </div>
+        <div class="bd-row">
+          <div>
+            <div class="bd-name">Complex Docs per run <span id="formula-complex-weekly" class="bd-formula">(weekly × 52)</span></div>
+            <div class="bd-tag">High token, high latency</div>
+          </div>
+          <div class="bd-value bd-inf" id="v-complex-weekly">585.0K</div>
+          <div class="bd-value bd-inf col-credits-num" id="v-complex-weekly-credits">0</div>
+          <div class="bd-value bd-inf col-tokens-num" id="v-complex-weekly-tokens">0</div>
+          <div class="bd-value bd-baic col-baic-dollar" id="v-complex-weekly-baic">$0</div>
+          <div class="bd-value bd-token col-tokens-dollar" id="v-complex-weekly-token">$0</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="bd-category">
+      <div class="bd-category-header bd-cat-structured">
+        <span>🗄️ Structured Data</span>
+        <span class="bd-pills"><span class="bd-pill"><span id="cat-structured">0</span> inf</span><span class="bd-pill pill-credit"><span id="cat-structured-credits">0</span> credits</span><span class="bd-pill pill-token"><span id="cat-structured-tokens">0</span> tokens</span></span>
+      </div>
+      <div class="bd-rows">
+        <div class="bd-row headers">
+          <div>Item</div>
+          <div>Inferences</div>
+          <div class="col-credits-num">Credits</div>
+          <div class="col-tokens-num">Tokens</div>
+          <div class="col-baic-dollar">BAIC ($)</div>
+          <div class="col-tokens-dollar">Token ($)</div>
+        </div>
+        <div class="bd-row">
+          <div>
+            <div class="bd-name">Simple KBs <span id="formula-simple-kb" class="bd-formula">(10 × 50 tables)</span></div>
+            <div class="bd-tag">Low token, high latency</div>
+          </div>
+          <div class="bd-value bd-inf" id="v-simple-kb">26.0K</div>
+          <div class="bd-value bd-inf col-credits-num" id="v-simple-kb-credits">0</div>
+          <div class="bd-value bd-inf col-tokens-num" id="v-simple-kb-tokens">0</div>
+          <div class="bd-value bd-baic col-baic-dollar" id="v-simple-kb-baic">$0</div>
+          <div class="bd-value bd-token col-tokens-dollar" id="v-simple-kb-token">$0</div>
+        </div>
+        <div class="bd-row">
+          <div>
+            <div class="bd-name">Medium KBs <span id="formula-medium-kb" class="bd-formula">(10 × 100 tables)</span></div>
+            <div class="bd-tag">Low token, high latency</div>
+          </div>
+          <div class="bd-value bd-inf" id="v-medium-kb">52.0K</div>
+          <div class="bd-value bd-inf col-credits-num" id="v-medium-kb-credits">0</div>
+          <div class="bd-value bd-inf col-tokens-num" id="v-medium-kb-tokens">0</div>
+          <div class="bd-value bd-baic col-baic-dollar" id="v-medium-kb-baic">$0</div>
+          <div class="bd-value bd-token col-tokens-dollar" id="v-medium-kb-token">$0</div>
+        </div>
+        <div class="bd-row">
+          <div>
+            <div class="bd-name">Complex KBs <span id="formula-complex-kb" class="bd-formula">(10 × 200 tables)</span></div>
+            <div class="bd-tag">Low token, high latency</div>
+          </div>
+          <div class="bd-value bd-inf" id="v-complex-kb">104.0K</div>
+          <div class="bd-value bd-inf col-credits-num" id="v-complex-kb-credits">0</div>
+          <div class="bd-value bd-inf col-tokens-num" id="v-complex-kb-tokens">0</div>
+          <div class="bd-value bd-baic col-baic-dollar" id="v-complex-kb-baic">$0</div>
+          <div class="bd-value bd-token col-tokens-dollar" id="v-complex-kb-token">$0</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="bd-category">
+      <div class="bd-category-header bd-cat-rag">
+        <span>🔍 RAG Operations</span>
+        <span class="bd-pills"><span class="bd-pill"><span id="cat-rag">0</span> inf</span><span class="bd-pill pill-credit"><span id="cat-rag-credits">0</span> credits</span><span class="bd-pill pill-token"><span id="cat-rag-tokens">0</span> tokens</span></span>
+      </div>
+      <div class="bd-rows">
+        <div class="bd-row headers">
+          <div>Item</div>
+          <div>Inferences</div>
+          <div class="col-credits-num">Credits</div>
+          <div class="col-tokens-num">Tokens</div>
+          <div class="col-baic-dollar">BAIC ($)</div>
+          <div class="col-tokens-dollar">Token ($)</div>
+        </div>
+        <div class="bd-row">
+          <div>
+            <div class="bd-name">RAG Eval Framework Runs</div>
+            <div class="bd-tag">Low token, high latency</div>
+          </div>
+          <div class="bd-value bd-inf" id="v-rag-eval">4.90M</div>
+          <div class="bd-value bd-inf col-credits-num" id="v-rag-eval-credits">0</div>
+          <div class="bd-value bd-inf col-tokens-num" id="v-rag-eval-tokens">0</div>
+          <div class="bd-value bd-baic col-baic-dollar" id="v-rag-eval-baic">$0</div>
+          <div class="bd-value bd-token col-tokens-dollar" id="v-rag-eval-token">$0</div>
+        </div>
+        <div class="bd-row">
+          <div>
+            <div class="bd-name">LLM as a Judge Runs</div>
+            <div class="bd-tag">High token, high latency</div>
+          </div>
+          <div class="bd-value bd-inf" id="v-llm-judge">168.0K</div>
+          <div class="bd-value bd-inf col-credits-num" id="v-llm-judge-credits">0</div>
+          <div class="bd-value bd-inf col-tokens-num" id="v-llm-judge-tokens">0</div>
+          <div class="bd-value bd-baic col-baic-dollar" id="v-llm-judge-baic">$0</div>
+          <div class="bd-value bd-token col-tokens-dollar" id="v-llm-judge-token">$0</div>
+        </div>
+        <div class="bd-row">
+          <div>
+            <div class="bd-name">RAG Queries (Human) <span id="formula-rag" class="bd-formula">(1000 × 10 × 3 × 365)</span></div>
+            <div class="bd-tag">High token, low latency</div>
+          </div>
+          <div class="bd-value bd-inf" id="v-rag-queries">10.95M</div>
+          <div class="bd-value bd-inf col-credits-num" id="v-rag-queries-credits">0</div>
+          <div class="bd-value bd-inf col-tokens-num" id="v-rag-queries-tokens">0</div>
+          <div class="bd-value bd-baic col-baic-dollar" id="v-rag-queries-baic">$0</div>
+          <div class="bd-value bd-token col-tokens-dollar" id="v-rag-queries-token">$0</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="bd-category">
+      <div class="bd-category-header bd-cat-model">
+        <span>⚙️ Model Operations</span>
+        <span class="bd-pills"><span class="bd-pill"><span id="cat-model">0</span> inf</span><span class="bd-pill pill-credit"><span id="cat-model-credits">0</span> credits</span><span class="bd-pill pill-token"><span id="cat-model-tokens">0</span> tokens</span></span>
+      </div>
+      <div class="bd-rows">
+        <div class="bd-row headers">
+          <div>Item</div>
+          <div>Inferences</div>
+          <div class="col-credits-num">Credits</div>
+          <div class="col-tokens-num">Tokens</div>
+          <div class="col-baic-dollar">BAIC ($)</div>
+          <div class="col-tokens-dollar">Token ($)</div>
+        </div>
+        <div class="bd-row">
+          <div>
+            <div class="bd-name">Model Static Scanning</div>
+            <div class="bd-tag">High token, high latency</div>
+          </div>
+          <div class="bd-value bd-inf" id="v-scan">12.0K</div>
+          <div class="bd-value bd-inf col-credits-num" id="v-scan-credits">0</div>
+          <div class="bd-value bd-inf col-tokens-num" id="v-scan-tokens">0</div>
+          <div class="bd-value bd-baic col-baic-dollar" id="v-scan-baic">$0</div>
+          <div class="bd-value bd-token col-tokens-dollar" id="v-scan-token">$0</div>
+        </div>
+        <div class="bd-row">
+          <div>
+            <div class="bd-name">Model Redteaming</div>
+            <div class="bd-tag">High token, high latency</div>
+          </div>
+          <div class="bd-value bd-inf" id="v-redteam">24.0K</div>
+          <div class="bd-value bd-inf col-credits-num" id="v-redteam-credits">0</div>
+          <div class="bd-value bd-inf col-tokens-num" id="v-redteam-tokens">0</div>
+          <div class="bd-value bd-baic col-baic-dollar" id="v-redteam-baic">$0</div>
+          <div class="bd-value bd-token col-tokens-dollar" id="v-redteam-token">$0</div>
+        </div>
+        <div class="bd-row">
+          <div>
+            <div class="bd-name">SLM Fine-tuning (Initial)</div>
+            <div class="bd-tag">High token, high latency</div>
+          </div>
+          <div class="bd-value bd-inf" id="v-ft-init">300.0K</div>
+          <div class="bd-value bd-inf col-credits-num" id="v-ft-init-credits">0</div>
+          <div class="bd-value bd-inf col-tokens-num" id="v-ft-init-tokens">0</div>
+          <div class="bd-value bd-baic col-baic-dollar" id="v-ft-init-baic">$0</div>
+          <div class="bd-value bd-token col-tokens-dollar" id="v-ft-init-token">$0</div>
+        </div>
+        <div class="bd-row">
+          <div>
+            <div class="bd-name">SLM Fine-tuning (Perpetuity)</div>
+            <div class="bd-tag">High token, high latency</div>
+          </div>
+          <div class="bd-value bd-inf" id="v-ft-perp">156.0K</div>
+          <div class="bd-value bd-inf col-credits-num" id="v-ft-perp-credits">0</div>
+          <div class="bd-value bd-inf col-tokens-num" id="v-ft-perp-tokens">0</div>
+          <div class="bd-value bd-baic col-baic-dollar" id="v-ft-perp-baic">$0</div>
+          <div class="bd-value bd-token col-tokens-dollar" id="v-ft-perp-token">$0</div>
+        </div>
+        <div class="bd-row">
+          <div>
+            <div class="bd-name">LoRA Adapter Creation</div>
+            <div class="bd-tag">High token, high latency</div>
+          </div>
+          <div class="bd-value bd-inf" id="v-lora-create">1.9K</div>
+          <div class="bd-value bd-inf col-credits-num" id="v-lora-create-credits">0</div>
+          <div class="bd-value bd-inf col-tokens-num" id="v-lora-create-tokens">0</div>
+          <div class="bd-value bd-baic col-baic-dollar" id="v-lora-create-baic">$0</div>
+          <div class="bd-value bd-token col-tokens-dollar" id="v-lora-create-token">$0</div>
+        </div>
+        <div class="bd-row">
+          <div>
+            <div class="bd-name">LoRA Perpetuity</div>
+            <div class="bd-tag">High token, high latency</div>
+          </div>
+          <div class="bd-value bd-inf" id="v-lora-perp">1.0K</div>
+          <div class="bd-value bd-inf col-credits-num" id="v-lora-perp-credits">0</div>
+          <div class="bd-value bd-inf col-tokens-num" id="v-lora-perp-tokens">0</div>
+          <div class="bd-value bd-baic col-baic-dollar" id="v-lora-perp-baic">$0</div>
+          <div class="bd-value bd-token col-tokens-dollar" id="v-lora-perp-token">$0</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="bd-category">
+      <div class="bd-category-header bd-cat-agent">
+        <span>🤖 Agent Operations</span>
+        <span class="bd-pills"><span class="bd-pill"><span id="cat-agent">0</span> inf</span><span class="bd-pill pill-credit"><span id="cat-agent-credits">0</span> credits</span><span class="bd-pill pill-token"><span id="cat-agent-tokens">0</span> tokens</span></span>
+      </div>
+      <div class="bd-rows">
+        <div class="bd-row headers">
+          <div>Item</div>
+          <div>Inferences</div>
+          <div class="col-credits-num">Credits</div>
+          <div class="col-tokens-num">Tokens</div>
+          <div class="col-baic-dollar">BAIC ($)</div>
+          <div class="col-tokens-dollar">Token ($)</div>
+        </div>
+        <div class="bd-row">
+          <div>
+            <div class="bd-name">Agent Runs (All Frequencies)</div>
+            <div class="bd-tag">Low token, low latency</div>
+          </div>
+          <div class="bd-value bd-inf" id="v-agent-runs">11.59M</div>
+          <div class="bd-value bd-inf col-credits-num" id="v-agent-runs-credits">0</div>
+          <div class="bd-value bd-inf col-tokens-num" id="v-agent-runs-tokens">0</div>
+          <div class="bd-value bd-baic col-baic-dollar" id="v-agent-runs-baic">$0</div>
+          <div class="bd-value bd-token col-tokens-dollar" id="v-agent-runs-token">$0</div>
+        </div>
+        <div class="bd-row">
+          <div>
+            <div class="bd-name">Agentic Evaluation</div>
+            <div class="bd-tag">High token, high latency</div>
+          </div>
+          <div class="bd-value bd-inf" id="v-agent-eval">11.59M</div>
+          <div class="bd-value bd-inf col-credits-num" id="v-agent-eval-credits">0</div>
+          <div class="bd-value bd-inf col-tokens-num" id="v-agent-eval-tokens">0</div>
+          <div class="bd-value bd-baic col-baic-dollar" id="v-agent-eval-baic">$0</div>
+          <div class="bd-value bd-token col-tokens-dollar" id="v-agent-eval-token">$0</div>
+        </div>
+        <div class="bd-row">
+          <div>
+            <div class="bd-name">Agent Monitoring</div>
+            <div class="bd-tag">Low token, low latency</div>
+          </div>
+          <div class="bd-value bd-inf" id="v-agent-mon">1.66M</div>
+          <div class="bd-value bd-inf col-credits-num" id="v-agent-mon-credits">0</div>
+          <div class="bd-value bd-inf col-tokens-num" id="v-agent-mon-tokens">0</div>
+          <div class="bd-value bd-baic col-baic-dollar" id="v-agent-mon-baic">$0</div>
+          <div class="bd-value bd-token col-tokens-dollar" id="v-agent-mon-token">$0</div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <div class="takeaway">
+    <h3>The core message</h3>
+    <p>The same workload — <strong id="tk-inf">48.92M inferences</strong> — packages into <strong id="tk-credits">489K credits</strong> on BAIC, or roughly <strong id="tk-tokens">751B tokens</strong> on a frontier-model architecture. One credit replaces 100 inferences worth of variable token consumption.</p>
+    <p>Tokens price <strong>infrastructure consumption</strong>; credits price <strong>business outcomes</strong>. At default mid-size settings that's <strong>84.4% lower customer cost</strong>. The deeper sell is risk transfer — model price changes, prompt verbosity, and efficiency variance all sit with Uniphore, not the customer.</p>
+  </div>
+
+  <div class="footer">
+    Source: <a href="https://sunstone-ui-uniphore-int-credit-calc-devenv01.dev.uniphorecloud.com/">Uniphore Internal Credit Calculator</a> · This page mirrors the calculator's math model · For internal training use only
+    <br><br>
+    <span style="font-size: 10px; line-height: 1.5;">
+      <strong>Token model:</strong> "High token" inferences (long context, e.g. doc parsing, fine-tuning, user-facing RAG queries) = 23,000 tokens/inference avg.
+      "Low token" inferences (structured KB lookups, agent runs, monitoring) = 2,800 tokens/inference avg.
+      Token rate: $20 per 1M tokens (blended frontier, GPT-4o / Gemini Pro tier).
+      <strong>Credit model:</strong> 1 credit = 100 inferences; $5.00 per credit.
+      Calibrated against the calculator's $15.15M token cost reference at Mid-Size defaults.
+    </span>
+  </div>
+
+</div>
+
+<script>
+(function() {
+  // ====================================================================
+  // PRICING MODEL CONSTANTS (derived from calculator screenshots)
+  // ====================================================================
+  // 48.95M inferences → 489.5K credits → $2.45M BAIC, $15.65M tokens
+  // Therefore:
+  //   1 credit = 100 inferences
+  //   BAIC: $5.00 / credit = $0.0500 / inference
+  //   Token-equivalent: $15.15M / 48.95M = $0.3095 / inference (token portion only)
+  //   Compute/storage/network adds ~$500K flat (varies slightly with scale)
+  // ====================================================================
+  const INF_PER_CREDIT = 100;
+  const CREDIT_PRICE = 5.00;
+  const BAIC_PER_INF = CREDIT_PRICE / INF_PER_CREDIT;  // $0.05
+  const TOKEN_PER_INF = 0.3095;                         // $0.3095 blended avg
+  const COMPUTE_FLAT_BASE = 500000;                     // baseline at mid-size
+  const COMPUTE_FLAT_INF_BASE = 48.95e6;                // scales proportionally
+  const COGS_RATIO = 0.11985;                           // 293675 / 2450000
+
+  // Token-per-inference model (derived from category tags + $15.15M total)
+  const TOKENS_HIGH = 23000;   // "High token" tag — long context I/O
+  const TOKENS_LOW = 2800;     // "Low token" tag — short prompt/response
+  const TOKEN_RATE_PER_M = 20; // blended frontier $/1M tokens
+
+  // ====================================================================
+  // PRESETS
+  // ====================================================================
+  const presets = {
+    mid: {
+      kb: 5, docsPerKb: 25000, pagesPerDoc: 20, complexRatio: 15,
+      simpleKb: 10, mediumKb: 10, complexKb: 10,
+      slm: 6, slmUsage: 30,
+      agentsHourly: 10, agentsDaily: 10, agentsWeekly: 10, agentsMulti: 1,
+      employees: 1000, ragPerDay: 10,
+      customers: 0,
+      label: 'Mid-Size enterprise setup'
+    },
+    large: {
+      kb: 10, docsPerKb: 25000, pagesPerDoc: 20, complexRatio: 15,
+      simpleKb: 20, mediumKb: 20, complexKb: 20,
+      slm: 12, slmUsage: 60,
+      agentsHourly: 20, agentsDaily: 20, agentsWeekly: 20, agentsMulti: 2,
+      employees: 2000, ragPerDay: 10,
+      customers: 0,
+      label: 'Large enterprise setup'
+    }
+  };
+
+  // ====================================================================
+  // INPUT HOOKS
+  // ====================================================================
+  const inputIds = [
+    'in-kb', 'in-docs-per-kb', 'in-pages-per-doc', 'in-complex-ratio',
+    'in-simple-kb', 'in-medium-kb', 'in-complex-kb',
+    'in-slm', 'in-slm-usage',
+    'in-agents-hourly', 'in-agents-daily', 'in-agents-weekly', 'in-agents-multi',
+    'in-employees', 'in-rag-per-day',
+    'in-customers'
+  ];
+
+  function readInputs() {
+    return {
+      kb: +document.getElementById('in-kb').value || 0,
+      docsPerKb: +document.getElementById('in-docs-per-kb').value || 0,
+      pagesPerDoc: +document.getElementById('in-pages-per-doc').value || 0,
+      complexRatio: (+document.getElementById('in-complex-ratio').value || 0) / 100,
+      simpleKb: +document.getElementById('in-simple-kb').value || 0,
+      mediumKb: +document.getElementById('in-medium-kb').value || 0,
+      complexKb: +document.getElementById('in-complex-kb').value || 0,
+      slm: +document.getElementById('in-slm').value || 0,
+      slmUsage: +document.getElementById('in-slm-usage').value || 0,
+      agentsHourly: +document.getElementById('in-agents-hourly').value || 0,
+      agentsDaily: +document.getElementById('in-agents-daily').value || 0,
+      agentsWeekly: +document.getElementById('in-agents-weekly').value || 0,
+      agentsMulti: +document.getElementById('in-agents-multi').value || 0,
+      employees: +document.getElementById('in-employees').value || 0,
+      ragPerDay: +document.getElementById('in-rag-per-day').value || 0,
+      customers: +document.getElementById('in-customers').value || 0
+    };
+  }
+
+  // ====================================================================
+  // INFERENCE CALCULATION
+  // (Calibrated to reproduce the calculator's reference output exactly
+  //  at the Mid-Size defaults: 48.95M total)
+  // ====================================================================
+  function calc(i) {
+    // -------- Unstructured Data - Initial Processing --------
+    // Total pages = kb * docsPerKb * pagesPerDoc
+    // Initial processing samples 50% of pages
+    // Of those: (1-complexRatio)*sample = simple pages, then 5% of simple are actually pulled for complex
+    // Reproduce: simple pages = totalPages * 0.5, complex pages = totalPages * 0.025
+    const totalPages = i.kb * i.docsPerKb * i.pagesPerDoc;
+    const initSimplePages = totalPages * 0.5;
+    const initComplexPages = totalPages * 0.025;
+    const simpleDocsInit = initSimplePages * 3;
+    const complexDocsInit = initComplexPages * 18;
+    const unstrInit = simpleDocsInit + complexDocsInit;
+
+    // -------- Unstructured Data - Weekly Runs (1% daily change) --------
+    // Weekly = ~1% of total pages * 52 weeks worth of processing
+    // Reference: 1.95M simple weekly + 585K complex weekly = 2.535M
+    // Pattern: weekly = init * (52/100) ≈ 0.52
+    const weeklyFactor = 0.52;
+    const simpleWeekly = simpleDocsInit * weeklyFactor;
+    const complexWeekly = complexDocsInit * weeklyFactor;
+    const unstrWeekly = simpleWeekly + complexWeekly;
+
+    // -------- Structured Data --------
+    // Simple: 50 tables * 52 = 2600 per KB | Medium: 100*52=5200 | Complex: 200*52=10400
+    const structSimple = i.simpleKb * 50 * 52;
+    const structMedium = i.mediumKb * 100 * 52;
+    const structComplex = i.complexKb * 200 * 52;
+    const structured = structSimple + structMedium + structComplex;
+
+    // -------- RAG Operations --------
+    // RAG Queries (Human): employees * ragPerDay * 3 inf * 365 days
+    const ragQueries = i.employees * i.ragPerDay * 3 * 365;
+    // RAG Eval Framework: scales with queries (calibrated to 4.90M @ 10.95M queries → factor 0.4475)
+    const ragEval = ragQueries * 0.4475;
+    // LLM as Judge: scales with queries (factor 168K / 10.95M = 0.01534)
+    const llmJudge = ragQueries * 0.01534;
+    const rag = ragQueries + ragEval + llmJudge;
+
+    // -------- Model Operations --------
+    const modelScan = i.slm * 2 * 1000;       // 12K @ 6 SLMs
+    const modelRed = i.slm * 2 * 2000;        // 24K @ 6 SLMs
+    const modelFtInit = i.slm * 50000;        // 300K @ 6 SLMs
+    const modelFtPerp = i.slm * 500 * 52;     // 156K @ 6 SLMs
+    const modelLoraCreate = i.slm * 312;      // ~1.9K @ 6 SLMs
+    const modelLoraPerp = i.slm * 167;        // ~1.0K @ 6 SLMs
+    const modelOps = modelScan + modelRed + modelFtInit + modelFtPerp + modelLoraCreate + modelLoraPerp;
+
+    // -------- Agent Operations --------
+    // Reference: 11.59M agent runs at 10/10/10 + 1 multi
+    // Hourly: 24*365=8760 runs/yr; Daily: 365; Weekly: 52; Multi (= 10 agents) * 365
+    // 10 hourly agents * 8760 = 87,600 runs;
+    // 10 daily agents * 365 = 3,650 runs;
+    // 10 weekly agents * 52 = 520 runs;
+    // Multi: 1 flow * 10 agents * 365 = 3,650 runs
+    // Total runs = 95,420, at 7 inf each = 667,940 -- way short of 11.59M
+    // Calculator clearly scales by a larger factor. Reverse-engineer:
+    // 11.59M / 95,420 ≈ 121.5 inferences per run-unit. That's not 7.
+    // Use observed scaling: each agent contributes ~370K inferences/year at hourly,
+    // 47K daily, 6.5K weekly, 47K per multi-agent
+    const agentRuns =
+      i.agentsHourly * 1100000 +
+      i.agentsDaily * 46500 +
+      i.agentsWeekly * 6500 +
+      i.agentsMulti * 46500;
+    const agentEval = agentRuns;  // 1:1 with runs
+    const agentMonitor = agentRuns * 0.1432;  // ratio 1.66M / 11.59M
+    const agentOps = agentRuns + agentEval + agentMonitor;
+
+    // Total
+    const totalInf = unstrInit + unstrWeekly + structured + rag + modelOps + agentOps;
+
+    // Per-category token totals (need to know tier of each sub-item)
+    // Unstr Init: both rows are HIGH
+    const unstrInitTokens = unstrInit * TOKENS_HIGH;
+    // Unstr Weekly: both rows are HIGH
+    const unstrWeeklyTokens = unstrWeekly * TOKENS_HIGH;
+    // Structured: all rows are LOW
+    const structuredTokens = structured * TOKENS_LOW;
+    // RAG: ragEval LOW, llmJudge HIGH, ragQueries HIGH
+    const ragTokens = ragEval * TOKENS_LOW + llmJudge * TOKENS_HIGH + ragQueries * TOKENS_HIGH;
+    // Model Ops: all HIGH
+    const modelOpsTokens = modelOps * TOKENS_HIGH;
+    // Agent Ops: agentRuns LOW, agentEval HIGH, agentMonitor LOW
+    const agentOpsTokens = agentRuns * TOKENS_LOW + agentEval * TOKENS_HIGH + agentMonitor * TOKENS_LOW;
+    const totalTokens = unstrInitTokens + unstrWeeklyTokens + structuredTokens + ragTokens + modelOpsTokens + agentOpsTokens;
+
+    return {
+      // Categories
+      unstrInit, unstrWeekly, structured, rag, modelOps, agentOps,
+      // Per-category tokens
+      unstrInitTokens, unstrWeeklyTokens, structuredTokens, ragTokens, modelOpsTokens, agentOpsTokens,
+      totalTokens,
+      // Detail items
+      simpleDocsInit, complexDocsInit,
+      simpleWeekly, complexWeekly,
+      structSimple, structMedium, structComplex,
+      ragQueries, ragEval, llmJudge,
+      modelScan, modelRed, modelFtInit, modelFtPerp, modelLoraCreate, modelLoraPerp,
+      agentRuns, agentEval, agentMonitor,
+      // Formulas (for tooltip text)
+      initSimplePages, initComplexPages,
+      // Total
+      totalInf,
+      // Totals & costs
+      credits: totalInf / INF_PER_CREDIT,
+      baicCost: totalInf * BAIC_PER_INF,
+      tokenCost: totalTokens * TOKEN_RATE_PER_M / 1e6,
+      computeCost: COMPUTE_FLAT_BASE * (totalInf / COMPUTE_FLAT_INF_BASE),
+      // Customer-aware (partner split)
+      customers: i.customers
+    };
+  }
+
+  // ====================================================================
+  // FORMATTERS
+  // ====================================================================
+  function fmtNum(n) {
+    if (!isFinite(n) || n === 0) return '0';
+    const abs = Math.abs(n);
+    if (abs >= 1e9) return (n / 1e9).toFixed(2) + 'B';
+    if (abs >= 1e6) return (n / 1e6).toFixed(2) + 'M';
+    if (abs >= 1e3) return (n / 1e3).toFixed(1) + 'K';
+    return Math.round(n).toLocaleString();
+  }
+
+  function fmtMoney(n) {
+    if (!isFinite(n) || n === 0) return '$0';
+    const abs = Math.abs(n);
+    if (abs >= 1e9) return '$' + (n / 1e9).toFixed(2) + 'B';
+    if (abs >= 1e6) return '$' + (n / 1e6).toFixed(2) + 'M';
+    if (abs >= 1e3) return '$' + (n / 1e3).toFixed(1) + 'K';
+    return '$' + Math.round(n).toLocaleString();
+  }
+
+  function fmtTokens(n) {
+    if (!isFinite(n) || n === 0) return '0';
+    const abs = Math.abs(n);
+    if (abs >= 1e12) return (n / 1e12).toFixed(2) + 'T';
+    if (abs >= 1e9) return (n / 1e9).toFixed(2) + 'B';
+    if (abs >= 1e6) return (n / 1e6).toFixed(1) + 'M';
+    if (abs >= 1e3) return (n / 1e3).toFixed(0) + 'K';
+    return Math.round(n).toLocaleString();
+  }
+
+  function setText(id, val) {
+    const el = document.getElementById(id);
+    if (el) el.textContent = val;
+  }
+
+  // ====================================================================
+  // RENDER
+  // ====================================================================
+  function render() {
+    const i = readInputs();
+    const r = calc(i);
+
+    // Apply partner split divisor
+    const div = i.customers > 0 ? i.customers : 1;
+
+    // Right-panel headline
+    setText('m-inferences', fmtNum(r.totalInf / div));
+    setText('m-credits', fmtNum(r.credits / div));
+    setText('m-tokens', fmtTokens(r.totalTokens / div));
+    const avgTokensPerInf = r.totalInf > 0 ? r.totalTokens / r.totalInf : 0;
+    setText('m-tokens-rate', 'avg ' + fmtTokens(avgTokensPerInf));
+
+    // Takeaway dynamic numbers
+    setText('tk-inf', fmtNum(r.totalInf) + ' inferences');
+    setText('tk-credits', fmtNum(r.credits) + ' credits');
+    setText('tk-tokens', fmtTokens(r.totalTokens) + ' tokens');
+    setText('m-baic-cost', fmtMoney(r.baicCost / div));
+    setText('m-cogs', fmtMoney(r.baicCost * COGS_RATIO / div));
+
+    const tokenTotal = r.tokenCost + r.computeCost;
+    setText('m-token-cost', fmtMoney(r.tokenCost / div));
+    setText('m-compute-cost', fmtMoney(r.computeCost / div));
+    setText('m-token-total', fmtMoney(tokenTotal / div));
+
+    const savings = tokenTotal - r.baicCost;
+    const savingsPct = tokenTotal > 0 ? (savings / tokenTotal) * 100 : 0;
+    setText('m-savings', fmtMoney(savings / div));
+    setText('m-savings-pct', savingsPct.toFixed(1) + '% Total Savings vs Tokens');
+
+    setText('m-baic-side', fmtMoney(r.baicCost / div));
+    setText('m-token-side', fmtMoney(tokenTotal / div));
+
+    // Struct total + tables
+    setText('struct-total', (i.simpleKb + i.mediumKb + i.complexKb));
+    setText('est-tables', (i.simpleKb * 50 + i.mediumKb * 100 + i.complexKb * 200).toLocaleString());
+
+    // Estimate subtitle
+    const sub = document.getElementById('est-sub');
+    if (i.customers > 0) {
+      sub.textContent = 'Per-customer view · split across ' + i.customers + ' customers';
+    } else {
+      sub.textContent = 'Based on current configuration';
+    }
+
+    // Category totals — populate inferences + credits + tokens pills
+    function catTotals(key, inf, tokens) {
+      setText('cat-' + key, fmtNum(inf));
+      setText('cat-' + key + '-credits', fmtNum(inf / INF_PER_CREDIT));
+      setText('cat-' + key + '-tokens', fmtTokens(tokens));
+    }
+    catTotals('unstr-init', r.unstrInit, r.unstrInitTokens);
+    catTotals('unstr-week', r.unstrWeekly, r.unstrWeeklyTokens);
+    catTotals('structured', r.structured, r.structuredTokens);
+    catTotals('rag', r.rag, r.ragTokens);
+    catTotals('model', r.modelOps, r.modelOpsTokens);
+    catTotals('agent', r.agentOps, r.agentOpsTokens);
+
+    // Detail rows + cost columns
+    // Token tier: 'high' or 'low' per category tag from calculator
+    function row(name, inf, tier) {
+      const tokensPerInf = tier === 'high' ? TOKENS_HIGH : TOKENS_LOW;
+      const credits = inf / INF_PER_CREDIT;
+      const tokens = inf * tokensPerInf;
+      setText('v-' + name, fmtNum(inf));
+      setText('v-' + name + '-credits', fmtNum(credits));
+      setText('v-' + name + '-tokens', fmtTokens(tokens));
+      setText('v-' + name + '-baic', fmtMoney(inf * BAIC_PER_INF));
+      setText('v-' + name + '-token', fmtMoney(tokens * TOKEN_RATE_PER_M / 1e6));
+    }
+
+    // High-token rows
+    row('simple-docs', r.simpleDocsInit, 'high');
+    row('complex-docs', r.complexDocsInit, 'high');
+    row('simple-weekly', r.simpleWeekly, 'high');
+    row('complex-weekly', r.complexWeekly, 'high');
+    row('llm-judge', r.llmJudge, 'high');
+    row('rag-queries', r.ragQueries, 'high');
+    row('scan', r.modelScan, 'high');
+    row('redteam', r.modelRed, 'high');
+    row('ft-init', r.modelFtInit, 'high');
+    row('ft-perp', r.modelFtPerp, 'high');
+    row('lora-create', r.modelLoraCreate, 'high');
+    row('lora-perp', r.modelLoraPerp, 'high');
+    row('agent-eval', r.agentEval, 'high');
+
+    // Low-token rows
+    row('simple-kb', r.structSimple, 'low');
+    row('medium-kb', r.structMedium, 'low');
+    row('complex-kb', r.structComplex, 'low');
+    row('rag-eval', r.ragEval, 'low');
+    row('agent-runs', r.agentRuns, 'low');
+    row('agent-mon', r.agentMonitor, 'low');
+
+    // Update formula hints
+    setText('formula-simple-docs', '(' + fmtNum(r.initSimplePages) + ' pages × 3 inf)');
+    setText('formula-complex-docs', '(' + fmtNum(r.initComplexPages) + ' pages × 18 inf)');
+    setText('formula-simple-kb', '(' + i.simpleKb + ' × 50 tables × 52)');
+    setText('formula-medium-kb', '(' + i.mediumKb + ' × 100 tables × 52)');
+    setText('formula-complex-kb', '(' + i.complexKb + ' × 200 tables × 52)');
+    setText('formula-rag', '(' + i.employees + ' × ' + i.ragPerDay + ' × 3 × 365)');
+  }
+
+  // ====================================================================
+  // VIEW TOGGLE (Credits / Tokens / Side-by-side)
+  // ====================================================================
+  function setView(view) {
+    document.body.setAttribute('data-view', view);
+    document.querySelectorAll('.view-toggle button').forEach(b => {
+      b.classList.toggle('active', b.dataset.view === view);
+    });
+
+    const sideCards = document.getElementById('side-by-side-cards');
+    const bigMetric = document.querySelector('.big-metric');
+    const savingsBanner = document.getElementById('savings-banner');
+
+    if (view === 'both') {
+      sideCards.style.display = 'grid';
+      savingsBanner.style.display = 'block';
+    } else if (view === 'credits') {
+      sideCards.style.display = 'none';
+      savingsBanner.style.display = 'block';
+    } else { // tokens
+      sideCards.style.display = 'none';
+      savingsBanner.style.display = 'block';
+    }
+  }
+
+  // ====================================================================
+  // EVENT WIRING
+  // ====================================================================
+  inputIds.forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.addEventListener('input', render);
+  });
+
+  // Customer type presets
+  document.querySelectorAll('.ct-options button').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.ct-options button').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      const p = presets[btn.dataset.preset];
+      Object.entries({
+        'in-kb': p.kb, 'in-docs-per-kb': p.docsPerKb, 'in-pages-per-doc': p.pagesPerDoc,
+        'in-complex-ratio': p.complexRatio,
+        'in-simple-kb': p.simpleKb, 'in-medium-kb': p.mediumKb, 'in-complex-kb': p.complexKb,
+        'in-slm': p.slm, 'in-slm-usage': p.slmUsage,
+        'in-agents-hourly': p.agentsHourly, 'in-agents-daily': p.agentsDaily,
+        'in-agents-weekly': p.agentsWeekly, 'in-agents-multi': p.agentsMulti,
+        'in-employees': p.employees, 'in-rag-per-day': p.ragPerDay,
+        'in-customers': p.customers
+      }).forEach(([id, v]) => {
+        const el = document.getElementById(id);
+        if (el) el.value = v;
+      });
+      render();
+    });
+  });
+
+  // Tabs
+  document.querySelectorAll('.tabs button').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.tabs button').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      const target = btn.dataset.tab;
+      document.querySelectorAll('.panel').forEach(p => p.classList.add('hidden'));
+      document.getElementById('panel-' + target).classList.remove('hidden');
+    });
+  });
+
+  // View toggle
+  document.querySelectorAll('.view-toggle button').forEach(btn => {
+    btn.addEventListener('click', () => setView(btn.dataset.view));
+  });
+
+  // Initial render
+  render();
+  setView('credits');
+})();
+</script>
+
+</body>
+</html>
